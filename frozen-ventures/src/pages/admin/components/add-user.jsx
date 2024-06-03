@@ -1,8 +1,134 @@
 import React, { useState } from "react";
-
+import {
+  getLatestUserId,
+  addUserAccountInfo,
+  addUserPersonalInfo,
+} from "../../../firebase/firebase-users";
+import {
+  validateContactNumber,
+  validateEmail,
+  validatePassword,
+  validateImage,
+} from "../../auth/utilities/sign-validation";
+import { emailExists, phoneExists } from "../../../firebase/firebase-users";
+import { IdGenerator } from "../../auth/utilities/id-generator";
 import { motion as m, easeInOut } from "framer-motion";
 
+export const AddUser = () => {
+  const [inputFName, setInputFName] = useState("");
+  const [inputLName, setInputLName] = useState("");
+  const [inputPass, setInputPass] = useState("");
+  const [inputCPass, setInputCPass] = useState("");
+  const [inputPhone, setInputPhone] = useState("");
+  const [inputEmail, setInputEmail] = useState("");
+  const [inputBirthdate, setInputBirthdate] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedGender, setSelectedGender] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
+  const [errors, setErrors] = useState([]);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const handleRoleChange = (e) => {
+    setSelectedRole(e.target.value);
+  };
+
+  const handleGenderChange = (e) => {
+    setSelectedGender(e.target.value);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setSelectedImage(file);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formErrors = [];
+    setSuccessMessage("");
+
+    if (!selectedRole) {
+      formErrors.push("Role is required");
+    } else if (!inputFName) {
+      formErrors.push("First name is required");
+    } else if (!inputLName) {
+      formErrors.push("Last name is required");
+    } else if (!inputPhone) {
+      formErrors.push("Phone is required");
+    } else if (!inputBirthdate) {
+      formErrors.push("Birthdate is required");
+    } else if (!inputEmail) {
+      formErrors.push("Email is required");
+    } else if (!selectedGender) {
+      formErrors.push("Gender is required");
+    } else if (!inputPass) {
+      formErrors.push("Password is required");
+    } else if (!inputCPass) {
+      formErrors.push("Confirm password is required");
+    } else if (inputPass !== inputCPass) {
+      formErrors.push("Passwords do not match");
+    } else if (!validateContactNumber(inputPhone)) {
+      formErrors.push("Invalid phone number");
+    } else if (await phoneExists(inputPhone)) {
+      formErrors.push("Phone number already exists");
+    } else if (!validateEmail(inputEmail)) {
+      formErrors.push("Invalid email address");
+    } else if (await emailExists(inputEmail)) {
+      formErrors.push("Email address already exists");
+    } else if (!validatePassword(inputPass) || !validatePassword(inputCPass)) {
+      formErrors.push(
+        "Password must include an uppercase letter, symbol, and be at least 6 characters."
+      );
+    } else if (
+      selectedRole === "Retailer" ||
+      selectedRole === "Distributor" ||
+      selectedRole === "Manufacturer"
+    ) {
+      if (!selectedImage) {
+        formErrors.push("Image is required");
+      } else if (!validateImage(selectedImage)) {
+        formErrors.push(
+          "Invalid image, must be 10MB or less and have a .jpg, .jpeg, or .png extension"
+        );
+      }
+    }
+
+    if (formErrors.length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
+    try {
+      const latestUserId = await getLatestUserId();
+      const userId = IdGenerator(latestUserId);
+      await addUserAccountInfo(
+        {
+          inputPass,
+          inputPhone,
+          inputEmail,
+          selectedRole,
+        },
+        userId
+      );
+      await addUserPersonalInfo(
+        {
+          inputFName,
+          inputLName,
+          inputPass,
+          inputBirthdate,
+          selectedGender,
+          selectedImage: "MIYAW",
+        },
+        userId
+      );
+      setSuccessMessage("User added successfully!");
+    } catch (error) {
+      console.error("Error adding user:", error);
+      setErrors(["Error adding user. Please try again."]);
+    }
+  };
 
   return (
     <m.div

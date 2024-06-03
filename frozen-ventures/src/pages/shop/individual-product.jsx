@@ -1,13 +1,4 @@
 import React, { useContext, useState, useEffect } from "react";
-import "../../assets/styles/individual-product.css";
-import { useAuth } from "../../context/auth-context";
-import { UserContext } from "../../context/user-context";
-import { OrderContext } from "../../context/order-context";
-import { useParams, Navigate } from "react-router-dom";
-import {
-  fetchProductByProductId,
-  addItemCartQuantity,
-} from "../../firebase/firebase-products";
 import {
   ArrowRight,
   Minus,
@@ -15,119 +6,14 @@ import {
   UserCircle,
   WarningCircle,
 } from "phosphor-react";
-import { motion as m, AnimatePresence } from "framer-motion";
-import dayjs from "dayjs";
 
 export const IndividualProduct = () => {
-  const { userSignedIn } = useAuth();
-  const { user } = useContext(UserContext);
-  const { setOrder } = useContext(OrderContext);
-  const { productId } = useParams();
-  const [product, setProduct] = useState(null);
-  const [showNotification, setShowNotification] = useState(false);
-  const [showErrorNotification, setShowErrorNotification] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const [orderSet, setOrderSet] = useState(false);
-
-  const userId = user?.userId;
-  const userRole = user?.userRole;
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      const productData = await fetchProductByProductId(userRole, productId);
-      setProduct(productData);
-    };
-    fetchProduct();
-  }, [productId]);
-
-  const handleAddToCart = async () => {
-    if (!userId) {
-      console.error("User not logged in");
-      return;
-    }
-    if (product.productStock > 0) {
-      await addItemCartQuantity(
-        userRole,
-        userId,
-        productId,
-        quantity,
-        product.productPrice,
-        product.productName,
-        product.shopName,
-        product.productImage,
-        product.productStock
-      );
-      setShowNotification(true);
-      setTimeout(() => {
-        setShowNotification(false);
-      }, 2000);
-    } else {
-      setShowErrorNotification(true);
-      setTimeout(() => setShowErrorNotification(false), 2000);
-    }
-  };
-
-  const handleBuyNow = async () => {
-    try {
-      const currentDate = dayjs().format("MMMM D, YYYY");
-
-      const orderDetails = {
-        products: {
-          [productId]: {
-            productImage: product.productImage,
-            productName: product.productName,
-            productPrice: product.productPrice,
-            quantity: quantity,
-            shopName: product.shopName,
-            subTotal: (product.productPrice * quantity).toFixed(2),
-            status: "pending",
-            orderDate: currentDate,
-          },
-        },
-      };
-
-      setOrder(orderDetails);
-      setOrderSet(true);
-    } catch (error) {
-      console.error("Error during checkout:", error.message);
-    }
-  };
-
-  if (orderSet) {
-    return <Navigate to="/order" replace />;
-  }
-
-  const handleIncrement = () => {
-    if (quantity < product.productStock) {
-      setQuantity((prevQuantity) => prevQuantity + 1);
-    }
-  };
-
-  const handleDecrement = () => {
-    if (quantity > 1) {
-      setQuantity((prevQuantity) => prevQuantity - 1);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    let newQuantity = parseInt(e.target.value);
-    if (!isNaN(newQuantity) && newQuantity >= 1 && newQuantity <= product.productStock) {
-      setQuantity(newQuantity);
-    } else if (newQuantity < 1) {
-      setQuantity(1);
-    } else if (newQuantity > product.productStock) {
-      setQuantity(product.productStock);
-    }
-  };
+ 
 
   return (
-    <m.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+    <div
       className="container individual-product"
     >
-      {!userSignedIn ? <Navigate to={"/sign"} replace={true} /> : null}
       {product && (
         <div className="product-details">
           <div className="header">
@@ -224,6 +110,6 @@ export const IndividualProduct = () => {
           </m.div>
         )}
       </AnimatePresence>
-    </m.div>
+    </div>
   );
 };

@@ -1,12 +1,8 @@
 import React from "react";
 import "../assets/styles/components.css";
-import { ErrorMessage } from "./error-message";
-import { SuccessMessage } from "./success-message";
 
 export const EditProduct = ({
   editTitle,
-  errorMessage,
-  successMessage,
   editProductData,
   handleEditFormChange,
   handleCancelEditProduct,
@@ -14,8 +10,6 @@ export const EditProduct = ({
 }) => {
   return (
     <div className="edit-product">
-      {errorMessage && <ErrorMessage message={errorMessage} />}
-      {successMessage && <SuccessMessage message={successMessage} />}
       <h2>{editTitle}</h2>
       <form onSubmit={handleSubmitEdit}>
         <div className="input-container">
@@ -27,7 +21,6 @@ export const EditProduct = ({
               name="productName"
               value={editProductData.productName}
               onChange={handleEditFormChange}
-              required
             />
           </div>
         </div>
@@ -40,7 +33,6 @@ export const EditProduct = ({
               name="productDescription"
               value={editProductData.productDescription}
               onChange={handleEditFormChange}
-              required
             ></textarea>
           </div>
         </div>

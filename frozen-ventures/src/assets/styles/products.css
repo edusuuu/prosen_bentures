@@ -1,0 +1,40 @@
+.product-item {
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 7px 25px rgba(0, 0, 0, 0.3);
+
+  img {
+    width: 300px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  .product-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+
+    .details {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    p,
+    span {
+      font-size: 1.25rem;
+      font-weight: 500;
+
+      span {
+        font-weight: 700;
+      }
+    }
+
+    .product-name {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-violet);
+    }
+  }
+}

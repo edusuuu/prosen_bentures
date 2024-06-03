@@ -140,10 +140,10 @@
 
 /* Message css */
 .message {
-  position: absolute;
+  position: fixed;
   top: 5%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, 10%);
   padding: 20px 30px;
   border-radius: 10px;
   text-align: center;
@@ -167,24 +167,20 @@
   border: solid 2px var(--color-dark-green);
 }
 
-
 /* Add product css */
-.add-product, .edit-product {
+.add-product,
+.edit-product {
   width: 40vw;
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 999;
+  z-index: 998;
   padding: 40px;
   border-radius: 20px;
   border: solid 3px var(--color-violet);
   box-shadow: 0 7px 25px rgba(0, 0, 0, 0.2);
   background-color: var(--color-white);
-
-  .message {
-    top: -10%;
-  }
 
   h2 {
     font-size: 2rem;
@@ -250,6 +246,89 @@
       border-radius: 10px;
       font-size: 1.25rem;
       width: 150px;
+      cursor: pointer;
+      border: solid 2px var(--color-violet);
+      color: var(--color-violet);
+      background-color: white;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--color-violet);
+      color: white;
+    }
+  }
+}
+
+/* Verify shop css */
+.verify-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 30px;
+  border-radius: 20px;
+  border: solid 3px var(--color-violet);
+  background-color: var(--color-white);
+
+  h1 {
+    font-size: 2.5rem;
+    color: var(--color-violet);
+  }
+
+  .text-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+
+    p:first-child {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    p:last-child {
+      font-size: 1.25rem;
+      font-weight: 500;
+      text-align: justify;
+    }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+
+    label {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    input {
+      font-size: 1.25rem;
+      font-weight: 500;
+      outline: none;
+      padding: 5px;
+      border: none;
+      border-radius: 5px;
+      background-color: rgb(240, 240, 240);
+    }
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 40px;
+    gap: 5vw;
+
+    button {
+      padding: 10px 20px;
+      font-weight: 800;
+      border-radius: 10px;
+      font-size: 1.25rem;
+      width: 200px;
       cursor: pointer;
       border: solid 2px var(--color-violet);
       color: var(--color-violet);

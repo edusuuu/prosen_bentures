@@ -10,6 +10,7 @@ import logo from "../../assets/images/logo.jpg";
 import { FacebookLogo } from "phosphor-react";
 import { InstagramLogo } from "phosphor-react";
 import { TwitterLogo } from "phosphor-react";
+import { Products } from "../../products";
 
 export const Home = () => {
   return (
@@ -32,10 +33,15 @@ export const Home = () => {
         </div>
       </div>
 
-      <div class="top-container">
-        <h2>Some random ass title</h2>
+      <div class="random-container">
+        <div className="text-container">
+          <h2>Some Chilling Finds</h2>
+          <p>Explore an Assortment of Epic Discoveries</p>
+        </div>
 
-        <div className="products">Product</div>
+        <div className="product-container">
+          <Products />
+        </div>
       </div>
 
       <div class="more-container">

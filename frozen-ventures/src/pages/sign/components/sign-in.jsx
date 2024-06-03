@@ -29,7 +29,7 @@ export const SignIn = () => {
         console.log("Response:", response.data);
         setMessage(response.data.message);
         if (response.data.status === 1) {
-          addUser(response.data.user.accountID, response.data.user.userRole);
+          addUser(response.data.user.accountID, response.data.user?.shopID, response.data.user.userRole);
           setShowSuccessMessage(true);
           setTimeout(() => {
             navigate("/splash");

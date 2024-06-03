@@ -4,6 +4,8 @@ import { UserContext } from "../../../context/user-context";
 import { AddProduct } from "../../../components/add-product";
 import { ConfirmationPopUp } from "../../../components/confirmation-popup";
 import { EditProduct } from "../../../components/edit-product";
+import { ErrorMessage } from "../../../components/error-message";
+import { SuccessMessage } from "../../../components/success-message";
 
 export const ManageProducts = () => {
   const { user } = useContext(UserContext);
@@ -124,60 +126,64 @@ export const ManageProducts = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("productImage", imageFile);
-    formData.append("productImageName", imageFile.name);
-    formData.append("productImageType", imageFile.type);
+    if (!newProductData.productName || !newProductData.productDescription) {
+      setErrorMessage("Please fill in all fields");
+    } else {
+      const formData = new FormData();
+      formData.append("productImage", imageFile);
+      formData.append("productImageName", imageFile.name);
+      formData.append("productImageType", imageFile.type);
 
-    axios
-      .post("http://localhost/api/uploadImage.php", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((uploadResponse) => {
-        if (uploadResponse.data.status === 1) {
-          const imagePath = uploadResponse.data.imagePath;
-          setNewProductData((prevData) => ({
-            ...prevData,
-            productImage: imagePath,
-          }));
+      axios
+        .post("http://localhost/api/uploadProductImage.php", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then((uploadResponse) => {
+          if (uploadResponse.data.status === 1) {
+            const imagePath = uploadResponse.data.imagePath;
+            setNewProductData((prevData) => ({
+              ...prevData,
+              productImage: imagePath,
+            }));
 
-          axios
-            .post("http://localhost/api/addProduct.php", newProductData)
-            .then((response) => {
-              console.log(response.data);
-              if (response.data.status === 1) {
-                setSuccessMessage("Product added successfully");
-              } else {
-                setErrorMessage("Failed to add product");
-              }
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-              setErrorMessage("An error occurred while adding the product");
-            });
-        } else {
-          setErrorMessage("Failed to upload image");
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        setErrorMessage("An error occurred while uploading the image");
-      });
+            axios
+              .post("http://localhost/api/addProduct.php", newProductData)
+              .then((response) => {
+                console.log(response.data);
+                if (response.data.status === 1) {
+                  setSuccessMessage("Product added successfully");
+                } else {
+                  setErrorMessage("Failed to add product");
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                setErrorMessage("An error occurred while adding the product");
+              });
+          } else {
+            setErrorMessage("Failed to upload image");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          setErrorMessage("An error occurred while uploading the image");
+        });
 
-    setTimeout(() => {
-      setNewProductData({
-        accountID: accountId,
-        productImage: "",
-        productName: "",
-        productDescription: "",
-        status: "1",
-      });
-      setSuccessMessage("");
-      setErrorMessage("");
-      setShowAddProductPopup(false);
-    }, 2000);
+      setTimeout(() => {
+        setNewProductData({
+          accountID: accountId,
+          productImage: "",
+          productName: "",
+          productDescription: "",
+          status: "1",
+        });
+        setSuccessMessage("");
+        setErrorMessage("");
+        setShowAddProductPopup(false);
+      }, 2000);
+    }
   };
 
   const handleEditProduct = (product) => {
@@ -212,6 +218,12 @@ export const ManageProducts = () => {
         console.error("Error:", error);
         setErrorMessage("An error occurred while updating the product");
       });
+
+    setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+      setShowEditProductPopup(false);
+    }, 2500);
   };
 
   const handleRemoveProduct = (productId) => {
@@ -243,10 +255,17 @@ export const ManageProducts = () => {
       .finally(() => {
         setShowConfirmationPopup(false);
       });
+
+      setTimeout(() => {
+        setErrorMessage("");
+        setSuccessMessage("");
+      }, 2500);
   };
 
   return (
     <div className="manage-products">
+      {errorMessage && <ErrorMessage message={errorMessage} />}
+      {successMessage && <SuccessMessage message={successMessage} />}
       <div className="header">
         <h1>Manage Products</h1>
         <button onClick={() => setShowAddProductPopup(true)}>

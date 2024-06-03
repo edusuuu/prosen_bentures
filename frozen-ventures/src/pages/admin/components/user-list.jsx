@@ -1,82 +1,210 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import {
+  getAllUsers,
+  getAdmins,
+  getCustomers,
+  getRetailers,
+  getDistributors,
+  getManufacturers,
+  fetchUserInfoById,
+  updateUserById as updateUserFirebase,
+} from "../../../firebase/firebase-admin";
+import {
+  validateContactNumber,
+  validateEmail,
+  validatePassword,
+} from "../../auth/utilities/sign-validation";
 import { motion as m, AnimatePresence, easeInOut } from "framer-motion";
 
-const UserList = () => {
-  const [selectRole, setSelectRole] = useState("All");
-  const [userList, setUserList] = useState([]);
+export const UserList = () => {
   const [inputUserId, setInputUserId] = useState("");
-  const [idErrors, setIdErrors] = useState([]);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [selectedRole, setSelectedRole] = useState("");
   const [inputFName, setInputFName] = useState("");
   const [inputLName, setInputLName] = useState("");
-  const [selectedGender, setSelectedGender] = useState("");
-  const [inputPhone, setInputPhone] = useState("");
-  const [inputBirthdate, setInputBirthdate] = useState("");
-  const [inputEmail, setInputEmail] = useState("");
   const [inputPass, setInputPass] = useState("");
   const [inputCPass, setInputCPass] = useState("");
+  const [inputPhone, setInputPhone] = useState("");
+  const [inputEmail, setInputEmail] = useState("");
+  const [inputBirthdate, setInputBirthdate] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedGender, setSelectedGender] = useState("");
+  const [userList, setUserList] = useState([]);
+  const [selectRole, setSelectRole] = useState("All");
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [idErrors, setIdErrors] = useState([]);
   const [editErrors, setEditErrors] = useState([]);
-  const [today, setToday] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const handleRoleChange = (e) => {
+    setSelectedRole(e.target.value);
+  };
+
+  const handleGenderChange = (e) => {
+    setSelectedGender(e.target.value);
+  };
+
+  const handleShowEditForm = (e) => {
+    setShowEditForm(false);
+  };
 
   useEffect(() => {
-    const todayDate = new Date().toISOString().split("T")[0];
-    setToday(todayDate);
-    fetchUsers();
-  }, []);
+    const fetchUsers = async () => {
+      try {
+        let users;
+        switch (selectRole) {
+          case "Admin":
+            users = await getAdmins();
+            break;
+          case "Customer":
+            users = await getCustomers();
+            break;
+          case "Retailer":
+            users = await getRetailers();
+            break;
+          case "Distributor":
+            users = await getDistributors();
+            break;
+          case "Manufacturer":
+            users = await getManufacturers();
+            break;
+          default:
+            users = await getAllUsers();
+        }
+        setUserList(users);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
 
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get("http://localhost/api/getUsers.php");
-      setUserList(response.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
+    fetchUsers();
+  }, [selectRole]);
+
+  useEffect(() => {
+    if (idErrors.length > 0) {
+      const timer = setTimeout(() => {
+        setIdErrors([]);
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [idErrors]);
+
+  useEffect(() => {
+    if (editErrors.length > 0) {
+      const timer = setTimeout(() => {
+        setEditErrors([]);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [editErrors]);
 
   const handleSubmitId = async (e) => {
     e.preventDefault();
+    const formErrors = [];
+    setIdErrors([]);
+
+    if (!inputUserId) {
+      formErrors.push("UserId is required");
+    }
+
+    if (inputUserId === "2024-0001") {
+      formErrors.push("UserId 2024-0001 cannot be edited");
+    }
+
+    if (formErrors.length > 0) {
+      setIdErrors(formErrors);
+      return;
+    }
+
     try {
-      const response = await axios.post("http://localhost/api/getUserById.php", { userId: inputUserId });
-      const userData = response.data;
-      setInputFName(userData.firstName);
-      setInputLName(userData.lastName);
-      setSelectedRole(userData.role);
-      setSelectedGender(userData.gender);
-      setInputPhone(userData.phone);
-      setInputBirthdate(userData.birthdate);
-      setInputEmail(userData.email);
-      setShowEditForm(true);
-      setSuccessMessage("User data loaded successfully.");
+      const userInfo = await fetchUserInfoById(inputUserId);
+      if (userInfo) {
+        setInputFName(userInfo.personalInfo.firstName);
+        setInputLName(userInfo.personalInfo.lastName);
+        setInputPass(userInfo.accountInfo.password);
+        setInputCPass(userInfo.accountInfo.password);
+        setInputPhone(userInfo.accountInfo.phone);
+        setInputEmail(userInfo.accountInfo.email);
+        setInputBirthdate(userInfo.personalInfo.birthdate);
+        setSelectedRole(userInfo.accountInfo.role);
+        setSelectedGender(userInfo.personalInfo.gender);
+        setShowEditForm(true);
+      } else {
+        setIdErrors(["User not found"]);
+      }
     } catch (error) {
-      console.error("Error fetching user data:", error);
-      setIdErrors(["Failed to fetch user data."]);
+      console.error("Error fetching user information:", error);
+      setIdErrors(["Error fetching user information"]);
     }
   };
 
   const handleSubmitEdit = async (e) => {
     e.preventDefault();
-    // Add validation and error handling here
+    const formErrors = [];
+    setSuccessMessage("");
+
+    if (!selectedRole) {
+      formErrors.push("Role is required");
+    } else if (!inputFName) {
+      formErrors.push("First name is required");
+    } else if (!inputLName) {
+      formErrors.push("Last name is required");
+    } else if (!inputPhone) {
+      formErrors.push("Phone is required");
+    } else if (!inputBirthdate) {
+      formErrors.push("Birthdate is required");
+    } else if (!inputEmail) {
+      formErrors.push("Email is required");
+    } else if (!selectedGender) {
+      formErrors.push("Gender is required");
+    } else if (!inputPass) {
+      formErrors.push("Password is required");
+    } else if (!inputCPass) {
+      formErrors.push("Confirm password is required");
+    } else if (inputPass !== inputCPass) {
+      formErrors.push("Passwords do not match");
+    } else if (!validateContactNumber(inputPhone)) {
+      formErrors.push("Invalid phone number");
+    } else if (!validateEmail(inputEmail)) {
+      formErrors.push("Invalid email address");
+    } else if (!validatePassword(inputPass) || !validatePassword(inputCPass)) {
+      formErrors.push(
+        "Password must include an uppercase letter, symbol, and be at least 6 characters."
+      );
+    }
+
+    if (formErrors.length > 0) {
+      setEditErrors(formErrors);
+      return;
+    }
+
     try {
-      const response = await axios.post("http://localhost/api/editUser.php", {
-        userId: inputUserId,
-        firstName: inputFName,
-        lastName: inputLName,
-        role: selectedRole,
-        gender: selectedGender,
-        phone: inputPhone,
-        birthdate: inputBirthdate,
-        email: inputEmail,
-        password: inputPass,
+      const updateResult = await updateUserFirebase(inputUserId, {
+        personalInfo: {
+          firstName: inputFName,
+          lastName: inputLName,
+          birthdate: inputBirthdate,
+          gender: selectedGender,
+        },
+        accountInfo: {
+          role: selectedRole,
+          password: inputPass,
+          phone: inputPhone,
+          email: inputEmail,
+        },
       });
-      setSuccessMessage("User data updated successfully.");
-      setShowEditForm(false);
-      fetchUsers();
+
+      if (updateResult.success) {
+        setSuccessMessage(updateResult.message);
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        setEditErrors([updateResult.message]);
+      }
     } catch (error) {
-      console.error("Error updating user data:", error);
-      setEditErrors(["Failed to update user data."]);
+      console.error("Error updating user:", error);
+      setEditErrors(["Error updating user. Please try again."]);
     }
   };
 
@@ -91,22 +219,40 @@ const UserList = () => {
       <h1>User List</h1>
 
       <div className="button-container">
-        <button className={selectRole === "All" ? "active" : ""} onClick={() => setSelectRole("All")}>
+        <button
+          className={selectRole === "All" ? "active" : ""}
+          onClick={() => setSelectRole("All")}
+        >
           All
         </button>
-        <button className={selectRole === "Admin" ? "active" : ""} onClick={() => setSelectRole("Admin")}>
+        <button
+          className={selectRole === "Admin" ? "active" : ""}
+          onClick={() => setSelectRole("Admin")}
+        >
           Admin
         </button>
-        <button className={selectRole === "Customer" ? "active" : ""} onClick={() => setSelectRole("Customer")}>
+        <button
+          className={selectRole === "Customer" ? "active" : ""}
+          onClick={() => setSelectRole("Customer")}
+        >
           Customers
         </button>
-        <button className={selectRole === "Retailer" ? "active" : ""} onClick={() => setSelectRole("Retailer")}>
+        <button
+          className={selectRole === "Retailer" ? "active" : ""}
+          onClick={() => setSelectRole("Retailer")}
+        >
           Retailers
         </button>
-        <button className={selectRole === "Distributor" ? "active" : ""} onClick={() => setSelectRole("Distributor")}>
+        <button
+          className={selectRole === "Distributor" ? "active" : ""}
+          onClick={() => setSelectRole("Distributor")}
+        >
           Distributors
         </button>
-        <button className={selectRole === "Manufacturer" ? "active" : ""} onClick={() => setSelectRole("Manufacturer")}>
+        <button
+          className={selectRole === "Manufacturer" ? "active" : ""}
+          onClick={() => setSelectRole("Manufacturer")}
+        >
           Manufacturers
         </button>
       </div>
@@ -115,20 +261,23 @@ const UserList = () => {
         <thead>
           <tr>
             <th>User ID</th>
+            <th>Role</th>
             <th>First Name</th>
             <th>Last Name</th>
-            <th>Birthdate</th>
-            <th>Gender</th>
             <th>Email</th>
             <th>Phone</th>
-            <th>Role</th>
+            <th>Status</th>
           </tr>
         </thead>
+
         <tbody>
           {userList.map((user) => (
             <tr key={user.id}>
               <td>
                 <p>{user.id}</p>
+              </td>
+              <td>
+                <p>{user.role}</p>
               </td>
               <td>
                 <p>{user.firstName}</p>
@@ -137,19 +286,13 @@ const UserList = () => {
                 <p>{user.lastName}</p>
               </td>
               <td>
-                <p>{user.birthdate}</p>
-              </td>
-              <td>
-                <p>{user.gender}</p>
-              </td>
-              <td>
                 <p>{user.email}</p>
               </td>
               <td>
                 <p>{user.phone}</p>
               </td>
               <td>
-                <p>{user.role}</p>
+                <p>{user.status}</p>
               </td>
             </tr>
           ))}
@@ -254,7 +397,7 @@ const UserList = () => {
                     id="role"
                     name="Role"
                     value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value)}
+                    onChange={handleRoleChange}
                   >
                     <option value="" disabled>
                       Select Role
@@ -297,7 +440,7 @@ const UserList = () => {
                     id="gender"
                     name="gender"
                     value={selectedGender}
-                    onChange={(e) => setSelectedGender(e.target.value)}
+                    onChange={handleGenderChange}
                   >
                     <option value="" disabled>
                       Select Gender
@@ -368,7 +511,7 @@ const UserList = () => {
               </div>
 
               <div className="submit-btn">
-                <button type="button" onClick={() => setShowEditForm(false)}>Cancel</button>
+                <button onClick={handleShowEditForm}>Cancel</button>
                 <button type="submit">Submit</button>
               </div>
             </m.form>
@@ -378,5 +521,3 @@ const UserList = () => {
     </m.div>
   );
 };
-
-export default UserList;

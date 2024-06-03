@@ -2,12 +2,14 @@ import React, { useContext, useState } from "react";
 import "../../assets/styles/menu.css";
 import { UserContext } from "../../context/user-context";
 import { Profile } from "./components/profile";
+import { SetUpShop } from "./components/setup-shop";
 import { Setting } from "./components/setting";
 import { ConfirmationPopUp } from "../../components/confirmation-popup";
 import { useNavigate } from "react-router-dom";
 import {
   UserSquare,
   GearSix,
+  Storefront,
   Warning,
   SignOut as SignOutIcon,
   CaretLeft,
@@ -15,7 +17,7 @@ import {
 } from "phosphor-react";
 
 export const Menu = () => {
-  const { clearUser } = useContext(UserContext);
+  const { user, clearUser } = useContext(UserContext);
   const [activeItem, setActiveItem] = useState("profile");
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSignOutPopup, setShowSignOutPopup] = useState(false);
@@ -76,6 +78,16 @@ export const Menu = () => {
             <UserSquare size={40} />
             {isExpanded && <p>Profile</p>}
           </li>
+          {user.userRole !== "customer" && user.userRole !== "admin" && (
+            <li
+              className={activeItem === "setup-shop" ? "active" : ""}
+              onClick={() => handleItemClick("setup-shop")}
+              data-tooltip="Set Up Shop"
+            >
+              <Storefront size={40} />
+              {isExpanded && <p>Set Up Shop</p>}
+            </li>
+          )}
           <li
             className={activeItem === "settings" ? "active" : ""}
             onClick={() => handleItemClick("settings")}
@@ -107,6 +119,7 @@ export const Menu = () => {
         style={{ marginLeft: isExpanded ? "15vw" : "5vw" }}
       >
         {activeItem === "profile" && <Profile />}
+        {activeItem === "setup-shop" && <SetUpShop />}
         {activeItem === "settings" && <Setting />}
       </div>
     </div>

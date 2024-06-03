@@ -14,7 +14,7 @@ export const Splash = () => {
     try {
       if (user.userRole == "admin") {
         setTimeout(() => {
-          navigate("/admin");
+          navigate("/home-admin");
         }, 3000);
       } else if (
         user.userRole == "retailer" ||

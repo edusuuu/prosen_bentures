@@ -1,6 +1,7 @@
 import React from "react";
 import "../../assets/styles/shop.css";
 import carrousel from "../../assets/images/0.jpg";
+import { Products } from "../../products";
 
 export const Shop = () => {
   return (
@@ -23,7 +24,7 @@ export const Shop = () => {
       </div>
 
       <div className="products-container">
-        <div className="products">MAP ITEMS TO DISPLAY</div>
+        <Products />
       </div>
     </div>
   );

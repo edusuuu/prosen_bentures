@@ -1,36 +1,50 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import {
+  getPendingUsers,
+  getPendingUsersByRole,
+  updateUserStatus,
+} from "../../../firebase/firebase-admin";
 import { motion as m, easeInOut } from "framer-motion";
 
-const PendingUsers = () => {
-  const [selectedRole, setSelectedRole] = useState("All");
+export const VerifyDocs = () => {
   const [userList, setUserList] = useState([]);
+  const [selectedRole, setSelectedRole] = useState("All");
 
-  useEffect(() => {
-    fetchPendingUsers();
-  }, []);
-
-  const fetchPendingUsers = async () => {
+  const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost/api/getPendingUsers.php");
-      setUserList(response.data);
+      let users;
+      switch (selectedRole) {
+        case "Retailer":
+          users = await getPendingUsersByRole("Retailer");
+          break;
+        case "Distributor":
+          users = await getPendingUsersByRole("Distributor");
+          break;
+        case "Manufacturer":
+          users = await getPendingUsersByRole("Manufacturer");
+          break;
+        default:
+          users = await getPendingUsers();
+      }
+      setUserList(users);
     } catch (error) {
-      console.error("Error fetching pending users:", error);
+      console.error("Error fetching users:", error);
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, [selectedRole]);
+
   const handleVerify = async (userId) => {
     try {
-      await axios.post("http://localhost/api/verifyUser.php", { userId });
-      fetchPendingUsers(); // Re-fetch the list after verification
+      await updateUserStatus(userId, "verified");
+      // Refresh the page after successful verification
+      window.location.reload();
     } catch (error) {
       console.error("Error verifying user:", error);
     }
   };
-
-  const filteredUsers = userList.filter(user => {
-    return selectedRole === "All" ? true : user.role === selectedRole;
-  });
 
   return (
     <m.div
@@ -84,7 +98,7 @@ const PendingUsers = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredUsers.map((user) => (
+          {userList.map((user) => (
             <tr key={user.id}>
               <td>{user.id}</td>
               <td>{user.firstName}</td>
@@ -109,5 +123,3 @@ const PendingUsers = () => {
     </m.div>
   );
 };
-
-export default PendingUsers;

@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Splash } from "./splash";
 import { Navbar } from "./components/navbar";
 import { Home } from "./pages/home/home";
+import { HomeAdmin } from "./pages/admin/home-admin";
 import { Sign } from "./pages/sign/sign";
 import { Menu } from "./pages/menu/menu";
 import { Shop } from "./pages/shop/shop";
@@ -27,6 +28,7 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/history" element={<History />} />
 
+            <Route path="/home-admin" element={<HomeAdmin />} />
             <Route path="/home-seller" element={<HomeSeller />} />
           </Routes>
         </Router>
