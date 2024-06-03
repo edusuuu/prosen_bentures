@@ -1,23 +1,20 @@
 import React, { useContext, useState } from "react";
 import "../../assets/styles/admin.css";
 import { UserContext } from "../../context/user-context";
+import { UserList } from "./components/user-list";
+import { AddUser } from "./components/add-user";
 import {
-  Gauge,
-  Storefront,
-  Truck,
-  ClockCounterClockwise,
-  Coin,
-  Cube,
-  Kanban,
+  Scroll,
+  CheckCircle,
+  UserPlus,
   Envelope,
   CaretRight,
   CaretLeft,
-  ShoppingCart,
 } from "phosphor-react";
 
 export const HomeAdmin = () => {
   const { user } = useContext(UserContext);
-  const [activeItem, setActiveItem] = useState("shop-performance");
+  const [activeItem, setActiveItem] = useState("user-list");
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleSidebar = () => {
@@ -50,7 +47,7 @@ export const HomeAdmin = () => {
             onClick={() => handleItemClick("user-list")}
             data-tooltip="User List"
           >
-            <Gauge size={40} />
+            <Scroll size={40} />
             {isExpanded && <p>User List</p>}
           </li>
           <li
@@ -58,7 +55,7 @@ export const HomeAdmin = () => {
             onClick={() => handleItemClick("add-user")}
             data-tooltip="Add User"
           >
-            <Truck size={40} />
+            <UserPlus size={40} />
             {isExpanded && <p>Add User</p>}
           </li>
           <li
@@ -66,7 +63,7 @@ export const HomeAdmin = () => {
             onClick={() => handleItemClick("verify-docs")}
             data-tooltip="Verify Documents"
           >
-            <Coin size={40} />
+            <CheckCircle size={40} />
             {isExpanded && <p>Verify Documents</p>}
           </li>
           <li
@@ -83,7 +80,8 @@ export const HomeAdmin = () => {
         className="selected-item"
         style={{ marginLeft: isExpanded ? "15vw" : "5vw" }}
       >
-        {activeItem === "performance" && <p>sad</p>}
+        {activeItem === "user-list" && <UserList />}
+        {activeItem === "add-user" && <AddUser />}
       </div>
     </div>
   );
