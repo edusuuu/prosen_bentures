@@ -15,8 +15,10 @@ export const SetUpShop = () => {
     shopName: "",
     shopDescription: "",
     shopImage: "",
+    shopType: user.userRole,
   });
   const [shop, setShop] = useState([]);
+  const [personalInfo, setPersonalInfo] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [file, setFile] = useState(null);
   const [fileContent, setFileContent] = useState("");
@@ -37,10 +39,11 @@ export const SetUpShop = () => {
           const shopData = Array.isArray(response.data) ? response.data[0] : {};
           setShop(shopData);
           setNewShopData({
-            accountID: shopData.accountID || user.accountId,
-            shopName: shopData.shopName || "",
-            shopDescription: shopData.shopDescription || "",
-            shopImage: shopData.shopLogo || "",
+            accountID: shopData?.accountID || user.accountId,
+            shopName: shopData?.shopName || "",
+            shopDescription: shopData?.shopDescription || "",
+            shopImage: shopData?.shopLogo || "",
+            shopType: shopData?.shopType || user.userRole,
           });
         })
         .catch((error) => {
@@ -48,12 +51,23 @@ export const SetUpShop = () => {
         });
     };
     fetchShopInfo();
-    const intervalId = setInterval(fetchShopInfo, 2500);
-    return () => clearInterval(intervalId);
   }, [accountId]);
 
   const handleEditClick = () => {
-    setEditable(!editable);
+    axios
+      .get(`http://localhost/api/managePersonalInfo.php?accountId=${user.accountId}`)
+      .then((response) => {
+        setPersonalInfo(Array.isArray(response.data) ? response.data : []);
+      });
+
+    if (personalInfo.length == 0) {
+      setErrorMessage("Please edit your personal information first");
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 2500);
+    } else {
+      setEditable(!editable);
+    }
   };
 
   const handleConfirmEditShow = () => {
@@ -70,7 +84,7 @@ export const SetUpShop = () => {
   };
 
   const handleCancelClick = () => {
-    setErrorMessage("")
+    setErrorMessage("");
     setSuccessMessage("");
     setShowVerifyShop(false);
   };
@@ -116,6 +130,31 @@ export const SetUpShop = () => {
               if (response.data.status === 1) {
                 setSuccessMessage("Shop information saved successfully");
                 setErrorMessage("");
+
+                setTimeout(() => {
+                  axios
+                    .get(
+                      `http://localhost/api/setUpShop.php?accountId=${accountId}&status=1`
+                    )
+                    .then((response) => {
+                      const shopData = Array.isArray(response.data)
+                        ? response.data[0]
+                        : {};
+                      setShop(shopData);
+                      setNewShopData({
+                        accountID: shopData?.accountID || user.accountId,
+                        shopName: shopData?.shopName || "",
+                        shopDescription: shopData?.shopDescription || "",
+                        shopImage: shopData?.shopLogo || "",
+                        shopType: shopData?.shopType || user.userRole,
+                      });
+                    })
+                    .catch((error) => {
+                      console.error("Error:", error);
+                    });
+                  setSuccessMessage("");
+                  setErrorMessage("");
+                }, 2000);
               } else {
                 setErrorMessage("Failed to save shop information");
                 setSuccessMessage("");
@@ -166,55 +205,57 @@ export const SetUpShop = () => {
 
   const handleSubmitVerify = (e) => {
     e.preventDefault();
-  
+
     if (!file) {
-      setErrorMessage('Please select a PDF file');
+      setErrorMessage("Please select a PDF file");
       return;
     }
-  
+
     const formData = new FormData();
-    formData.append('shopDocument', file);
-  
-    axios.post('http://localhost/api/uploadShopVerificationFiles.php', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-    .then((response) => {
-      if (response.data.status === 1) {
-        const filePath = response.data.filePath;
-  
-        axios.post('http://localhost/api/verifyShop.php', { 
-          accountID: user.accountId,
-          shopDocument: filePath
-        })
-        .then((updateResponse) => {
-          if (updateResponse.data.status === 1) {
-            setSuccessMessage(updateResponse.data.message);
-            setErrorMessage('');
-          } else {
-            setErrorMessage(updateResponse.data.message);
-            setSuccessMessage('');
-          }
-        })
-        .catch((error) => {
-          console.error('Error updating shop document:', error);
-          setErrorMessage('An error occurred while submiting the file');
-          setSuccessMessage('');
-        });
-      } else {
-        setErrorMessage('Failed to upload shop document');
-        setSuccessMessage('');
-      }
-    })
-    .catch((error) => {
-      console.error('Error uploading shop document:', error);
-      setErrorMessage('An error occurred while submiting the file');
-      setSuccessMessage('');
-    });
+    formData.append("shopDocument", file);
+
+    axios
+      .post("http://localhost/api/uploadShopVerificationFiles.php", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((response) => {
+        if (response.data.status === 1) {
+          const filePath = response.data.filePath;
+
+          axios
+            .post("http://localhost/api/verifyShop.php", {
+              accountID: user.accountId,
+              shopDocument: filePath,
+            })
+            .then((updateResponse) => {
+              if (updateResponse.data.status === 1) {
+                setSuccessMessage(updateResponse.data.message);
+                setErrorMessage("");
+              } else {
+                setErrorMessage(updateResponse.data.message);
+                setSuccessMessage("");
+              }
+            })
+            .catch((error) => {
+              console.error("Error updating shop document:", error);
+              setErrorMessage("An error occurred while submiting the file");
+              setSuccessMessage("");
+            });
+        } else {
+          setErrorMessage("Failed to upload shop document");
+          setSuccessMessage("");
+        }
+      })
+      .catch((error) => {
+        console.error("Error uploading shop document:", error);
+        setErrorMessage("An error occurred while submiting the file");
+        setSuccessMessage("");
+      });
     setTimeout(() => {
-      setShowVerifyShop(false)
-      setErrorMessage("")
+      setShowVerifyShop(false);
+      setErrorMessage("");
       setSuccessMessage("");
     }, 2500);
   };
@@ -222,22 +263,22 @@ export const SetUpShop = () => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      if (selectedFile.type !== 'application/pdf') {
-        setErrorMessage('Only PDF files are allowed');
+      if (selectedFile.type !== "application/pdf") {
+        setErrorMessage("Only PDF files are allowed");
         return;
       }
       setFile(selectedFile);
       const reader = new FileReader();
-  
+
       reader.onload = (event) => {
         setFileContent(event.target.result);
         console.log("File content:", event.target.result);
       };
-  
+
       reader.onerror = (error) => {
         console.error("Error reading file:", error);
       };
-  
+
       reader.readAsText(selectedFile);
     }
 
@@ -267,16 +308,18 @@ export const SetUpShop = () => {
           />
         )}
         <div className="shop-profile">
-          <img
-            src={
-              `http://localhost/api/productImages/${shop.shopLogo}` && ShopImg
-            }
-            alt="User"
-          />
+          {shop ? (
+            <img
+              src={`http://localhost/api/${shop.shopLogo}`}
+              alt="Shop Logo"
+            />
+          ) : (
+            <img src={ShopImg} />
+          )}
 
           <div className="shop-details">
-            <p>{shop.shopName}</p>
-            <p>{shop.isVerified == 1 ? "Verified" : "Not Verified"}</p>
+            <p>{shop?.shopName ? shop.shopName : "No shop name"}</p>
+            <p>{shop?.isVerified == 1 ? "Verified" : "Not Verified"}</p>
           </div>
           <button
             type="button"
@@ -284,7 +327,7 @@ export const SetUpShop = () => {
           >
             <NotePencil size={30} /> <p>{editable ? "Save" : "Edit"}</p>
           </button>
-          {shop.isVerified == 0 && (
+          {shop?.isVerified == 0 && (
             <button type="button" onClick={handleVerifyClick}>
               <CheckCircle size={30} /> <p>Verify</p>
             </button>
@@ -305,7 +348,7 @@ export const SetUpShop = () => {
                 id="shopImage"
                 name="shopImage"
                 accept=".jpg, .jpeg, .png"
-                readOnly={!editable}
+                disabled={!editable}
                 onChange={handleImageChange}
               />
             </div>
@@ -316,7 +359,7 @@ export const SetUpShop = () => {
                 id="shopName"
                 type="text"
                 readOnly={!editable}
-                value={newShopData.shopName}
+                value={newShopData?.shopName}
                 onChange={handleShopFormChange}
               />
             </div>

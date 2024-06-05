@@ -5,18 +5,20 @@ import { ProductStock } from "./product-stock";
 
 export const ManageInventory = () => {
   const { user } = useContext(UserContext);
+  const shopId = user.shopId;
+
   const [inventory, setInventory] = useState([]);
   const [showProductStock, setShowProductStock] = useState(false);
   const [selectedProductName, setSelectedProductName] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState(null);
-  const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [selectedShopId, setSelectedShopId] = useState(null);
   const productStockRef = useRef(null);
 
   useEffect(() => {
     const fetchInventory = async () => {
       try {
         const response = await axios.get(
-          `http://localhost/api/getProducts.php?accountId=${user.accountId}`
+          `http://localhost/api/getInventory.php?shopId=${shopId}&status=1`
         );
         setInventory(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
@@ -24,12 +26,14 @@ export const ManageInventory = () => {
       }
     };
     fetchInventory();
-  }, [user.accountId]);
+    const intervalId = setInterval(fetchInventory, 5000);
+    return () => clearInterval(intervalId);
+  }, [user.shopId]);
 
   const handleShowProductStock = (productName, productId) => {
     setSelectedProductName(productName);
     setSelectedProductId(productId);
-    setSelectedAccountId(user.accountId);
+    setSelectedShopId(user.shopId);
     setShowProductStock(true);
   };
 
@@ -51,7 +55,7 @@ export const ManageInventory = () => {
 
   const handleCancelClick = () => {
     setShowProductStock(false);
-  }
+  };
 
   return (
     <div className="manage-inventory">
@@ -59,16 +63,16 @@ export const ManageInventory = () => {
       {!inventory || inventory.length === 0 ? (
         <p>No inventory items found.</p>
       ) : (
-        <div className="products-container">
+        <div className="inventory-products-container">
           {inventory.map((product) => (
             <div
               key={product.productID}
-              className="product"
+              className="inventory-product"
               onClick={() =>
                 handleShowProductStock(product.productName, product.productID)
               }
             >
-              <div className="header">
+              <div className="inventory-header">
                 <p>
                   <span>Product ID: </span>
                   {product.productID}
@@ -83,7 +87,7 @@ export const ManageInventory = () => {
                 src={`http://localhost/api/productImages/${product.productImage}`}
               />
 
-              <div className="product-details">
+              <div className="inventory-product-details">
                 <p>{product.productName}</p>
                 <p>
                   <span>Remaining Stock: </span>
@@ -95,12 +99,12 @@ export const ManageInventory = () => {
         </div>
       )}
       {showProductStock && (
-        <div className="product-stock" ref={productStockRef}>
+        <div className="inventory-product-stock" ref={productStockRef}>
           <ProductStock
             handleCancelClick={handleCancelClick}
             productName={selectedProductName}
             productId={selectedProductId}
-            accountId={selectedAccountId}
+            shopId={selectedShopId}
           />
         </div>
       )}

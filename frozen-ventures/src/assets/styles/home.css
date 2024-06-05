@@ -1,3 +1,12 @@
+/* Home css */
+.home {
+  h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--color-violet);
+  }
+}
+
 /* Hero Css */
 .hero {
   display: flex;
@@ -18,11 +27,6 @@
     flex-direction: column;
     align-items: center;
     padding: 100px 0 20px 0;
-
-    h2 {
-      font-size: 4rem;
-      color: var(--color-primary-text);
-    }
 
     p {
       font-size: 2rem;
@@ -70,10 +74,6 @@
     gap: 1vh;
     padding-bottom: 40px;
 
-    h2 {
-      font-size: 3rem;
-    }
-
     p {
       font-size: 2rem;
       font-weight: 500;
@@ -83,7 +83,9 @@
   .product-container {
     width: 90vw;
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 3vw;
   }
 }
 
@@ -103,11 +105,6 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-
-    h2 {
-      font-size: 3rem;
-      color: var(--color-primary-text);
-    }
 
     p {
       text-align: justify;
@@ -145,11 +142,6 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-
-    h2 {
-      font-size: 3rem;
-      color: var(--color-violet);
-    }
 
     p {
       font-size: 1.5rem;
@@ -205,6 +197,7 @@
   p {
     color: var(--color-violet);
     font-weight: 600;
+    text-align: justify;
   }
 
   .about-container {

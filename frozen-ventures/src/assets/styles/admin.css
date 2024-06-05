@@ -8,6 +8,9 @@
     font-size: 2rem;
     font-weight: 800;
     color: var(--color-violet);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: solid 2px var(--color-violet);
   }
 
   .side-bar {
@@ -126,30 +129,92 @@
   }
 
   /* User list css */
-  .user-list {
+  .user-list,
+  .verify-docs {
     padding: 20px;
 
-    .button-container {
-      display: flex;
-      justify-content: space-between;
-      margin: 20px 0;
+    .list-container {
+      .button-container {
+        display: flex;
+        justify-content: space-between;
 
-      button:first-child {
-        border-top-left-radius: 10px;
+        button.active {
+          color: white;
+          background-color: var(--color-violet);
+        }
+
+        button:first-child {
+          border-top-left-radius: 10px;
+        }
+
+        button:last-child {
+          border-top-right-radius: 10px;
+        }
+
+        button {
+          width: 100%;
+          padding: 10px;
+          font-size: 1.5rem;
+          font-weight: 800;
+          cursor: pointer;
+          color: var(--color-violet);
+          border: solid 2px var(--color-violet);
+          background-color: var(--color-white);
+          transition: all 0.3s ease;
+        }
+
+        button:hover {
+          background-color: var(--color-violet);
+          color: var(--color-white);
+        }
       }
 
-      button:last-child {
-        border-top-right-radius: 10px;
+      table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th, td {
+          padding: 15px;
+          text-align: center;
+          border: 1px solid var(--color-light-gray);
+        }
+
+        th {
+          background-color: var(--color-light-gray);
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+
+        td {
+          font-size: 1rem;
+          font-weight: 500;
+        }
+
+        td:last-child {
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  /* Verify docs css */
+  .verify-docs {
+    td {
+      a {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-violet);
       }
 
       button {
         width: 100%;
         padding: 5px;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: 800;
         cursor: pointer;
+        border-radius: 10px;
         color: var(--color-violet);
-        border: solid 3px var(--color-violet);
+        border: solid 2px var(--color-violet);
         background-color: var(--color-white);
         transition: all 0.3s ease;
       }

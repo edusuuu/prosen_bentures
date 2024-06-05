@@ -40,7 +40,7 @@ export const SignIn = () => {
       })
       .catch((error) => {
         console.error("Error:", error);
-        setMessage("Failed to create account");
+        setMessage("Failed to sign in");
         setShowErrorMessage(true);
       });
 

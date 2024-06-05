@@ -101,7 +101,7 @@
   border-radius: 20px;
   border: solid 3px var(--color-violet);
   box-shadow: 0 7px 25px rgba(0, 0, 0, 0.2);
-  z-index: 999;
+  z-index: 998;
 
   h1 {
     font-size: 2rem;

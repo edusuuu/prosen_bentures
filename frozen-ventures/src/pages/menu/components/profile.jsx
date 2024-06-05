@@ -9,6 +9,9 @@ import { NotePencil, X } from "phosphor-react";
 
 export const Profile = () => {
   const { user } = useContext(UserContext);
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [userRole, setUserRole] = useState("");
   const [inputFirstName, setInputFirstName] = useState("");
   const [inputLastName, setInputLastName] = useState("");
   const [inputBirthdate, setInputBirthdate] = useState("");
@@ -45,10 +48,13 @@ export const Profile = () => {
   useEffect(() => {
     axios
       .get(
-        `http://localhost/api/getPersonalInfo.php?accountId=${user.accountId}`
+        `http://localhost/api/managePersonalInfo.php?accountId=${user.accountId}`
       )
       .then((response) => {
         const userData = response.data;
+        setEmail(userData.email);
+        setPhone(userData.phone);
+        setUserRole(userData.userRole);
         setInputFirstName(userData.firstName);
         setInputLastName(userData.lastName);
         setInputBirthdate(userData.birthdate);
@@ -66,7 +72,7 @@ export const Profile = () => {
       })
       .catch((error) => {
         console.error("Error:", error);
-        setMessage("Failed to create account");
+        setMessage("Failed to load information");
         setShowErrorMessage(true);
       });
 
@@ -90,7 +96,7 @@ export const Profile = () => {
       zip: inputZip,
     };
     axios
-      .post("http://localhost/api/personalInfo.php", newPersonalData)
+      .post("http://localhost/api/managePersonalInfo.php", newPersonalData)
       .then((response) => {
         console.log("Response:", response.data);
         setMessage(response.data.message);
@@ -129,9 +135,9 @@ export const Profile = () => {
         <div className="user-profile">
           <img src={UserImg} alt="User" />
           <div className="account-info">
-            <p>Email Display</p>
-            <p>Phone Display</p>
-            <p>Role Display</p>
+            <p>{email ? email : "No email"}</p>
+            <p>{phone ? phone : "No phone number"}</p>
+            <p>{userRole ? userRole : "No role"}</p>
           </div>
           <button
             type="button"

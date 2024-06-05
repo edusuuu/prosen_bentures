@@ -1,125 +1,168 @@
 import React, { useState, useEffect } from "react";
-import {
-  getPendingUsers,
-  getPendingUsersByRole,
-  updateUserStatus,
-} from "../../../firebase/firebase-admin";
-import { motion as m, easeInOut } from "framer-motion";
+import axios from "axios";
+import { ErrorMessage } from "../../../components/error-message";
+import { SuccessMessage } from "../../../components/success-message";
+import { ConfirmationPopUp } from "../../../components/confirmation-popup";
 
 export const VerifyDocs = () => {
-  const [userList, setUserList] = useState([]);
   const [selectedRole, setSelectedRole] = useState("All");
-
-  const fetchUsers = async () => {
-    try {
-      let users;
-      switch (selectedRole) {
-        case "Retailer":
-          users = await getPendingUsersByRole("Retailer");
-          break;
-        case "Distributor":
-          users = await getPendingUsersByRole("Distributor");
-          break;
-        case "Manufacturer":
-          users = await getPendingUsersByRole("Manufacturer");
-          break;
-        default:
-          users = await getPendingUsers();
-      }
-      setUserList(users);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
+  const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [userList, setUserList] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showConfirmationPopUp, setShowConfirmationPopUp] = useState(false);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get("http://localhost/api/allShop.php");
+        if (response.data.status === 1) {
+          setUserList(response.data.data);
+        } else {
+          setErrorMessage("Failed to fetch users");
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setErrorMessage("Failed to fetch users. Please try again later.");
+      }
+    };
     fetchUsers();
-  }, [selectedRole]);
+    const intervalId = setInterval(fetchUsers, 3000);
+    return () => clearInterval(intervalId);
+  }, []);
 
-  const handleVerify = async (userId) => {
-    try {
-      await updateUserStatus(userId, "verified");
-      // Refresh the page after successful verification
-      window.location.reload();
-    } catch (error) {
-      console.error("Error verifying user:", error);
-    }
+  const handleVerify = (id) => {
+    setSelectedAccountId(id);
+    setShowConfirmationPopUp(true);
   };
 
+  const handleCancelClick = () => {
+    setSelectedAccountId("");
+    setShowConfirmationPopUp(false);
+  };
+
+  const handleConfirmClick = async () => {
+    try {
+      const response = await axios.post("http://localhost/api/allShop.php", { accountID: selectedAccountId });
+      if (response.data.status === 1) {
+        setSuccessMessage("User verified successfully");
+        setUserList((prevList) =>
+          prevList.map((user) =>
+            user.accountID === selectedAccountId ? { ...user, isVerified: 1 } : user
+          )
+        );
+      } else {
+        setErrorMessage("Failed to verify user");
+      }
+    } catch (error) {
+      console.error("Error verifying user:", error);
+      setErrorMessage("Failed to verify user. Please try again later.");
+    }
+
+    setTimeout(() => {
+      setErrorMessage("");
+      setSuccessMessage("");
+      setShowConfirmationPopUp(false);
+    }, 2500);
+  };
+
+  const filteredUsers =
+    selectedRole === "All"
+      ? userList
+      : userList.filter((user) => user.userRole === selectedRole);
+
   return (
-    <m.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5, ease: easeInOut }}
-      className="verify-docs"
-    >
+    <div className="verify-docs">
+      {errorMessage && <ErrorMessage message={errorMessage} />}
+      {successMessage && <SuccessMessage message={successMessage} />}
+      {showConfirmationPopUp && (
+        <ConfirmationPopUp
+          confirmTitle="Verify Shop"
+          confirmMessage="Are you sure you want to verify this shop?"
+          handleCancel={handleCancelClick}
+          handleConfirm={handleConfirmClick}
+        />
+      )}
       <h1>Pending Users</h1>
 
-      <div className="button-container">
-        <button
-          className={selectedRole === "All" ? "active" : ""}
-          onClick={() => setSelectedRole("All")}
-        >
-          All
-        </button>
-        <button
-          className={selectedRole === "Retailer" ? "active" : ""}
-          onClick={() => setSelectedRole("Retailer")}
-        >
-          Retailers
-        </button>
-        <button
-          className={selectedRole === "Distributor" ? "active" : ""}
-          onClick={() => setSelectedRole("Distributor")}
-        >
-          Distributors
-        </button>
-        <button
-          className={selectedRole === "Manufacturer" ? "active" : ""}
-          onClick={() => setSelectedRole("Manufacturer")}
-        >
-          Manufacturers
-        </button>
-      </div>
+      <div className="list-container">
+        <div className="button-container">
+          <button
+            className={selectedRole === "All" ? "active" : ""}
+            onClick={() => setSelectedRole("All")}
+          >
+            All
+          </button>
+          <button
+            className={selectedRole === "retailer" ? "active" : ""}
+            onClick={() => setSelectedRole("retailer")}
+          >
+            Retailers
+          </button>
+          <button
+            className={selectedRole === "distributor" ? "active" : ""}
+            onClick={() => setSelectedRole("distributor")}
+          >
+            Distributors
+          </button>
+          <button
+            className={selectedRole === "manufacturer" ? "active" : ""}
+            onClick={() => setSelectedRole("manufacturer")}
+          >
+            Manufacturers
+          </button>
+        </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>User ID</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Document</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {userList.map((user) => (
-            <tr key={user.id}>
-              <td>{user.id}</td>
-              <td>{user.firstName}</td>
-              <td>{user.lastName}</td>
-              <td>{user.email}</td>
-              <td>{user.phone}</td>
-              <td>{user.role}</td>
-              <td>{user.status}</td>
-              <td>document here</td>
-              <td>
-                <button
-                  onClick={() => handleVerify(user.id)}
-                  disabled={user.status === "verified"}
-                >
-                  Verify
-                </button>
-              </td>
+        <table>
+          <thead>
+            <tr>
+              <th>Account ID</th>
+              <th>Shop Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>isVerified</th>
+              <th>Document</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </m.div>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user) => (
+              <tr key={user.accountID}>
+                <td>{user.accountID}</td>
+                <td>{user.shopName}</td>
+                <td>{user.email}</td>
+                <td>{user.phone}</td>
+                <td>{user.userRole}</td>
+                <td>{user.status === 1 ? "Active" : "Inactive"}</td>
+                <td>{user.isVerified === 1 ? "Verified" : "Not Verified"}</td>
+                <td>
+                  {user.shopDocument ? (
+                    <a
+                      href={`http://localhost/api/${user.shopDocument}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View Document
+                    </a>
+                  ) : (
+                    "No Document"
+                  )}
+                </td>
+                <td>
+                  <button
+                    onClick={() => handleVerify(user.accountID)}
+                    disabled={user.isVerified === 1}
+                  >
+                    {user.isVerified === 1 ? "Already Verified" : "Verify"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };

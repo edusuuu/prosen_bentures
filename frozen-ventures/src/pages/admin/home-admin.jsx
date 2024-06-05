@@ -3,8 +3,11 @@ import "../../assets/styles/admin.css";
 import { UserContext } from "../../context/user-context";
 import { UserList } from "./components/user-list";
 import { AddUser } from "./components/add-user";
+import { EditUser } from "./components/edit-user";
+import { VerifyDocs } from "./components/verify-docs";
 import {
   Scroll,
+  Pencil,
   CheckCircle,
   UserPlus,
   Envelope,
@@ -59,6 +62,14 @@ export const HomeAdmin = () => {
             {isExpanded && <p>Add User</p>}
           </li>
           <li
+            className={activeItem === "edit-user" ? "active" : ""}
+            onClick={() => handleItemClick("edit-user")}
+            data-tooltip="Edit User"
+          >
+            <Pencil size={40} />
+            {isExpanded && <p>Edit User</p>}
+          </li>
+          <li
             className={activeItem === "verify-docs" ? "active" : ""}
             onClick={() => handleItemClick("verify-docs")}
             data-tooltip="Verify Documents"
@@ -82,6 +93,8 @@ export const HomeAdmin = () => {
       >
         {activeItem === "user-list" && <UserList />}
         {activeItem === "add-user" && <AddUser />}
+        {activeItem === "edit-user" && <EditUser />}
+        {activeItem === "verify-docs" && <VerifyDocs />}
       </div>
     </div>
   );

@@ -1,0 +1,326 @@
+.order {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--color-violet);
+    }
+
+    .tb-container {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+
+      p {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      span {
+        font-size: 1.5rem;
+        font-weight: 500;
+      }
+
+      button {
+        border: none;
+        border-radius: 5px;
+        padding: 10px 50px;
+        font-weight: 900;
+        font-size: 1.25rem;
+        color: var(--color-violet);
+        background-color: var(--color-pale-stone);
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        color: var(--color-pale-stone);
+        background-color: var(--color-violet);
+        cursor: pointer;
+      }
+    }
+  }
+
+  .informations {
+    display: grid;
+    grid-template-columns: 2fr 2fr;
+    grid-template-rows: 2fr 1fr;
+    grid-gap: 20px;
+    padding: 20px 0 70px 0;
+    border-radius: 10px;
+    border: solid 3px var(--color-violet);
+    height: 300px;
+
+    .title-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 10px;
+      border-bottom: solid 1px;
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      button {
+        border: none;
+        border-radius: 5px;
+        padding: 10px 50px;
+        font-weight: 900;
+        font-size: 1.25rem;
+        color: var(--color-pale-stone);
+        background-color: var(--color-violet);
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        color: var(--color-violet);
+        background-color: var(--color-pale-stone);
+        cursor: pointer;
+      }
+    }
+
+    .info {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 40px;
+
+      h4,
+      p {
+        font-size: 1.25rem;
+      }
+
+      h4 {
+        font-weight: 700;
+      }
+
+      p {
+        font-weight: 600;
+      }
+    }
+
+    .ship-group {
+      display: flex;
+      gap: 1vw;
+
+      .ship-btn {
+        padding: 5px 20px;
+        font-weight: 600;
+        border-radius: 5px;
+        cursor: pointer;
+        color: var(--color-violet);
+        background-color: white;
+        border: solid 2px var(--color-violet);
+        transition: all 0.3s ease;
+      }
+
+      .ship-btn:hover {
+        background-color: var(--color-violet);
+        color: white;
+      }
+    }
+
+    .ship-date {
+      padding: 5px;
+      border-radius: 5px;
+      border: solid 2px var(--color-violet);
+    }
+  }
+
+  .item-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--color-violet);
+    }
+
+    .label {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: solid 2px gray;
+      padding: 20px 0;
+
+      p {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 20px 0 0 0;
+      }
+
+      .item {
+        width: 300px;
+        text-align: center;
+      }
+    }
+  }
+
+  .order-item {
+    table {
+      width: 100%;
+
+      thead tr {
+        border-bottom: solid 2px gray;
+      }
+
+      tr {
+        display: flex;
+        width: inherit;
+        justify-content: space-between;
+
+        th {
+          display: flex;
+          min-width: 20vw;
+          justify-content: center;
+          align-items: center;
+          font-size: 1.5rem;
+          font-weight: 600;
+          padding: 20px 0;
+          color: gray;
+        }
+
+        td {
+          display: flex;
+          min-width: 20vw;
+          justify-content: center;
+          align-items: center;
+          padding: 20px 0;
+
+          p {
+            font-size: 1.25rem;
+            font-weight: 600;
+          }
+        }
+      }
+
+      tbody {
+        td {
+          display: flex;
+          justify-content: flex-start;
+
+          p {
+            font-size: 1.5rem;
+            width: 100%;
+            text-align: center;
+          }
+        }
+
+        td:first-child {
+          display: flex;
+          gap: 20px;
+
+          .description {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+          }
+
+          p:first-child {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--color-violet);
+          }
+
+          p {
+            font-size: 1.25rem;
+            text-align: left;
+          }
+        }
+
+        img {
+          width: 200px;
+          border-radius: 20px;
+        }
+      }
+    }
+
+    .information {
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+
+      img {
+        width: 150px;
+        border-radius: 20px;
+      }
+    }
+  }
+
+  .t-container {
+    display: flex;
+    justify-content: flex-end;
+
+    .total-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 30px 40px;
+      border-radius: 20px;
+      background-color: var(--color-pale-violet);
+
+      h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--color-violet);
+      }
+
+      .sub-total,
+      .shipping,
+      .fee,
+      .total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 500;
+        color: black;
+
+        p {
+          font-size: 1.25rem;
+          font-weight: 600;
+        }
+
+        .label {
+          font-weight: 800;
+          margin-right: 200px;
+        }
+      }
+
+      .line {
+        border: solid 1px black;
+        margin: 10px 0;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.25rem;
+        font-weight: 800;
+        border: solid 2px var(--color-violet);
+        color: var(--color-white);
+        background-color: var(--color-violet);
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        background-color: var(--color-pale-violet);
+        color: var(--color-violet);
+        cursor: pointer;
+      }
+    }
+  }
+}

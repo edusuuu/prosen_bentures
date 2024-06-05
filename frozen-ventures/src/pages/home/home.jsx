@@ -1,5 +1,6 @@
 import React from "react";
 import "../../assets/styles/home.css";
+import { useNavigate } from "react-router-dom";
 import carrousel from "../../assets/images/0.jpg";
 import one from "../../assets/images/1.jpg";
 import two from "../../assets/images/2.jpg";
@@ -13,6 +14,12 @@ import { TwitterLogo } from "phosphor-react";
 import { Products } from "../../products";
 
 export const Home = () => {
+  const navigate = useNavigate();
+
+  const handleMoreFlavorsClick = () => {
+    navigate("/shop")
+  }
+
   return (
     <div className="home">
       <div class="container hero">
@@ -54,7 +61,7 @@ export const Home = () => {
             satisfy every palate and treat yourself to the perfect ice cream
             experience
           </p>
-          <button>More Flavors</button>
+          <button onClick={handleMoreFlavorsClick}>More Flavors</button>
         </div>
 
         <img src={five} alt="" />
@@ -99,7 +106,7 @@ export const Home = () => {
         <div class="about-container">
           <div class="logo-container">
             <img src={logo} alt="Logo" />
-            <h1>FrozenVentures</h1>
+            <h2>FrozenVentures</h2>
           </div>
 
           <p>

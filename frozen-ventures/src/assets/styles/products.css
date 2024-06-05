@@ -1,8 +1,11 @@
-.product-item {
+.product-item-individual {
   display: flex;
+  margin-left: auto;
+  margin-right: auto;
   flex-direction: column;
   padding: 40px;
   border-radius: 10px;
+  cursor: pointer;
   box-shadow: 0 7px 25px rgba(0, 0, 0, 0.3);
 
   img {

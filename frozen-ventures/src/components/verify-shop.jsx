@@ -12,10 +12,13 @@ export const VerifyShop = ({
 
       <div className="text-container">
         <p>Please insert the ff into a single PDF file:</p>
-        <p>
-          Business Name Registration, Barangay Clearance, Mayor's Permit, Bureau
-          of Internal Revenue and Food and Drug Administration
-        </p>
+        <ul>
+          <li> Business Name Registration</li>
+          <li>Barangay Clearance</li>
+          <li>Mayor's Permit</li>
+          <li>Bureau of Internal Revenue</li>
+          <li>and Food and Drug Administration</li>
+        </ul>
       </div>
 
       <form onSubmit={handleSubmit}>

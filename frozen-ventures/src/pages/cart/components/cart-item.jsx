@@ -1,202 +1,177 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, { useContext, useState, useEffect } from "react";
+import axios from "axios";
 import { UserContext } from "../../../context/user-context";
 import { Minus, Plus, Trash } from "phosphor-react";
-import { AnimatePresence, easeInOut, motion as m } from "framer-motion";
-import {
-  fetchCartItemsForUser,
-  removeItemFromCart,
-  setCartItemQuantity,
-  fetchProductStockByProductId,
-  fetchProductSizeByProductId,
-} from "../../../firebase/firebase-products";
+import { SuccessMessage } from "../../../components/success-message";
+import { ErrorMessage } from "../../../components/error-message";
+import { ConfirmationPopUp } from "../../../components/confirmation-popup";
+import { useNavigate } from "react-router-dom";
 
-export const CartItem = ({ setTotalPrice, setProducts }) => {
+export const CartItems = ({ cartItems, setCartItems, updateSubTotal }) => {
   const { user } = useContext(UserContext);
-  const [cartItems, setCartItems] = useState([]);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const confirmDeleteRef = useRef(null);
-
-  const userId = user.userId;
-  const userRole = user.userRole;
+  const [selectedId, setSelectedId] = useState({
+    accountId: "",
+    productId: "",
+    priceId: "",
+  });
+  const [selectedProductName, setSelectedProductName] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showConfirmationPopUp, setShowConfirmationPopUp] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCartItems = () => {
-      if (userId) {
-        try {
-          fetchCartItemsForUser(userRole, userId, async (cartItemsData) => {
-            if (typeof cartItemsData === "object") {
-              const cartItemsArray = await Promise.all(
-                Object.keys(cartItemsData).map(async (key) => {
-                  const productStock = await fetchProductStockByProductId(userRole, key);
-                  const productSize = await fetchProductSizeByProductId(userRole, key);
-                  return {
-                    productId: key,
-                    productStock: productStock,
-                    productSize: productSize,
-                    ...cartItemsData[key],
-                  };
-                })
-              );
-              setCartItems(cartItemsArray);
-            } else {
-              console.error("Cart items data is not an object:", cartItemsData);
-            }
-          });
-        } catch (error) {
-          console.error("Error fetching cart items:", error);
-        }
+    const fetchCartItems = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost/api/manageCart.php?accountId=${user.accountId}`
+        );
+        setCartItems(response.data);
+      } catch (error) {
+        console.error("Error fetching cart items:", error);
       }
     };
+
     fetchCartItems();
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [userId]);
+  }, [user.accountId, setCartItems]);
 
   useEffect(() => {
-    const total = cartItems.reduce(
-      (sum, item) => sum + item.quantity * item.productPrice,
-      0
+    const subTotal = cartItems.reduce((acc, item) => acc + item.productPrice * item.quantity, 0);
+    updateSubTotal(subTotal);
+  }, [cartItems, updateSubTotal]);
+
+  const handleQuantityChange = (
+    productId,
+    priceId,
+    newQuantity,
+    productPrice,
+    productStock,
+    totalPrice
+  ) => {
+    const newTotalPrice = Number(productPrice * newQuantity).toFixed(2);
+
+    setCartItems((prevCartItems) =>
+      prevCartItems.map((cartItem) =>
+        cartItem.productID === productId && cartItem.priceID === priceId
+          ? {
+              ...cartItem,
+              quantity: Math.min(
+                Math.max(1, newQuantity),
+                cartItem.productStock
+              ),
+              totalPrice: Number(productPrice * newQuantity).toFixed(2),
+            }
+          : cartItem
+      )
     );
-    setProducts(cartItems);
-    setTotalPrice(total);
-  }, [cartItems, setTotalPrice, setProducts]);
-
-  const handleDelete = (productId) => {
-    setItemToDelete(productId);
-    setShowConfirmDelete(true);
+    axios
+      .put(`http://localhost/api/manageCart.php`, {
+        accountId: user.accountId,
+        productId,
+        priceId,
+        totalPrice: newTotalPrice,
+        quantity: newQuantity,
+        productStock: productStock,
+      })
+      .then((response) => {
+        if (response.data.status === 1) {
+          setSuccessMessage(response.data.message);
+        } else {
+          setErrorMessage(response.data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating quantity:", error);
+      });
+    setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+    }, 2000);
   };
 
-  const handleConfirmDelete = async () => {
-    if (itemToDelete) {
-      await removeItemFromCart(userRole, userId, itemToDelete);
-      setCartItems(cartItems.filter((item) => item.productId !== itemToDelete));
-    }
-    setShowConfirmDelete(false);
-  };
-
-  const handleCancelDelete = () => {
-    setItemToDelete(null);
-    setShowConfirmDelete(false);
-  };
-
-  const handleClickOutside = (event) => {
-    if (
-      confirmDeleteRef.current &&
-      !confirmDeleteRef.current.contains(event.target)
-    ) {
-      setShowConfirmDelete(false);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const updateCartItemQuantity = async (productId, newQuantity) => {
-    const selectedItem = cartItems.find((item) => item.productId === productId);
-    if (!selectedItem) {
-      console.error("Selected item not found in cart.");
-      return;
-    }
-  
-    const productStock = await fetchProductStockByProductId(userRole, productId);
-    if (!productStock) {
-      console.error("Product stock not found for productId:", productId);
-      return;
-    }
-  
-    if (newQuantity < 1 || isNaN(newQuantity)) {
-      newQuantity = 1;
-    } else if (newQuantity > productStock) {
-      newQuantity = productStock;
-    }
-  
-    const updatedCartItems = cartItems.map((item) => {
-      if (item.productId === productId) {
-        return { ...item, quantity: newQuantity };
-      }
-      return item;
+  const handleDeleteClick = (productId, priceId, productName) => {
+    setSelectedId({
+      accountId: user.accountId,
+      productId: productId,
+      priceId: priceId,
     });
-  
-    setCartItems(updatedCartItems);
-  
-    await setCartItemQuantity(
-      userRole,
-      userId,
-      productId,
-      newQuantity,
-      selectedItem.productPrice,
-      selectedItem.productName,
-      selectedItem.shopName,
-      selectedItem.productImage,
-      productStock
-    );
+    setSelectedProductName(productName);
+    setShowConfirmationPopUp(true);
   };
 
-  const handleIncrement = async (productId) => {
-    const productStock = await fetchProductStockByProductId(userRole, productId);
-    if (!productStock) {
-      console.error("Product stock not found for productId:", productId);
-      return;
-    }
-
-    const selectedItem = cartItems.find((item) => item.productId === productId);
-    const updatedQuantity = selectedItem.quantity + 1;
-    if (updatedQuantity <= productStock) {
-      await updateCartItemQuantity(productId, updatedQuantity);
-    }
+  const handleCancelClick = () => {
+    setSelectedId([]);
+    setSelectedProductName("");
+    setShowConfirmationPopUp(false);
   };
 
-  const handleDecrement = async (productId) => {
-    const selectedItem = cartItems.find((item) => item.productId === productId);
-    if (selectedItem.quantity > 1) {
-      const updatedQuantity = selectedItem.quantity - 1;
-      await updateCartItemQuantity(productId, updatedQuantity);
-    }
+  const handleConfirmDeleteClick = () => {
+    axios
+      .delete(`http://localhost/api/manageCart.php`, {
+        data: {
+          accountId: selectedId.accountId,
+          productId: selectedId.productId,
+          priceId: selectedId.priceId,
+        },
+      })
+      .then((response) => {
+        if (response.data.status === 1) {
+          setCartItems((prevCartItems) =>
+            prevCartItems.filter(
+              (cartItem) =>
+                !(
+                  cartItem.productID === selectedId.productId &&
+                  cartItem.priceID === selectedId.priceId
+                )
+            )
+          );
+          setSuccessMessage(response.data.message);
+        } else {
+          setErrorMessage(response.data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Error deleting cart item:", error);
+        setErrorMessage("Failed to remove product from cart");
+      });
+    setShowConfirmationPopUp(false);
+    setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+    }, 2000);
   };
 
-  const handleQuantityChange = (event, productId) => {
-    let updatedQuantity = parseInt(event.target.value, 10);
-    if (updatedQuantity < 1 || isNaN(updatedQuantity)) {
-      updatedQuantity = 1;
-    }
-
-    const selectedItem = cartItems.find((item) => item.productId === productId);
-    if (updatedQuantity > selectedItem.productStock) {
-      updatedQuantity = selectedItem.productStock;
-    }
-
-    const updatedCartItems = cartItems.map((item) => {
-      if (item.productId === productId) {
-        return { ...item, quantity: updatedQuantity };
-      }
-      return item;
-    });
-    setCartItems(updatedCartItems);
-  };
-
-  const handleQuantityBlur = async (productId) => {
-    const selectedItem = cartItems.find((item) => item.productId === productId);
-    if (selectedItem) {
-      await updateCartItemQuantity(productId, selectedItem.quantity);
-    }
+  const handleProductClick = (productId) => {
+    navigate(`/individual-product/${productId}`);
   };
 
   return (
     <div className="cart-item">
+      {errorMessage && <ErrorMessage message={errorMessage} />}
+      {successMessage && <SuccessMessage message={successMessage} />}
+      {showConfirmationPopUp && (
+        <ConfirmationPopUp
+          confirmTitle="Remove From Cart"
+          confirmMessage={`Would you like to remove ${selectedProductName} from your cart?`}
+          handleConfirm={handleConfirmDeleteClick}
+          handleCancel={handleCancelClick}
+        />
+      )}
       <table>
         <tbody>
           {cartItems.map((cartItem) => (
-            <tr key={cartItem.productId}>
+            <tr className="cart-product" key={cartItem.cartID}>
               <td className="information">
-                <img src={cartItem.productImage} alt={cartItem.productName} />
+                <img
+                  src={`http://localhost/api/productImages/${cartItem.productImage}`}
+                  alt={cartItem.productName}
+                  onClick={() => handleProductClick(cartItem.productID)}
+                />
                 <div className="description">
-                  <p>{cartItem.productName}</p>
+                  <p onClick={() => handleProductClick(cartItem.productID)}>
+                    {cartItem.productName}
+                  </p>
+                  <p>{cartItem.productFlavor}</p>
                   <p>{cartItem.shopName}</p>
                   <p>{cartItem.productSize}</p>
                   <p>Php {cartItem.productPrice}</p>
@@ -205,31 +180,58 @@ export const CartItem = ({ setTotalPrice, setProducts }) => {
               </td>
               <td className="quantity">
                 <button
-                  onClick={() => handleDecrement(cartItem.productId)}
-                  disabled={cartItem.quantity <= 1}
+                  onClick={() =>
+                    handleQuantityChange(
+                      cartItem.productID,
+                      cartItem.priceID,
+                      cartItem.quantity - 1,
+                      cartItem.productPrice,
+                      cartItem.productStock
+                    )
+                  }
                 >
                   <Minus size={25} />
                 </button>
                 <input
                   type="number"
                   value={cartItem.quantity}
-                  onChange={(e) => handleQuantityChange(e, cartItem.productId)}
-                  onBlur={() => handleQuantityBlur(cartItem.productId)}
+                  onChange={(e) =>
+                    handleQuantityChange(
+                      cartItem.productID,
+                      cartItem.priceID,
+                      parseInt(e.target.value),
+                      cartItem.productPrice,
+                      cartItem.productStock
+                    )
+                  }
                 />
                 <button
-                  onClick={() => handleIncrement(cartItem.productId)}
-                  disabled={cartItem.quantity >= cartItem.productStock}
+                  onClick={() =>
+                    handleQuantityChange(
+                      cartItem.productID,
+                      cartItem.priceID,
+                      cartItem.quantity + 1,
+                      cartItem.productPrice,
+                      cartItem.productStock
+                    )
+                  }
                 >
                   <Plus size={25} />
                 </button>
               </td>
               <td>
-                <p>
-                  Php {(cartItem.quantity * cartItem.productPrice).toFixed(2)}
-                </p>
+                <p>Php {cartItem.totalPrice}</p>
               </td>
               <td className="delete">
-                <button onClick={() => handleDelete(cartItem.productId)}>
+                <button
+                  onClick={() =>
+                    handleDeleteClick(
+                      cartItem.productID,
+                      cartItem.priceID,
+                      cartItem.productName
+                    )
+                  }
+                >
                   <Trash size={45} />
                 </button>
               </td>
@@ -237,28 +239,6 @@ export const CartItem = ({ setTotalPrice, setProducts }) => {
           ))}
         </tbody>
       </table>
-
-      <AnimatePresence>
-        {showConfirmDelete && (
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: easeInOut }}
-            className="confirm-delete"
-            ref={confirmDeleteRef}
-          >
-            <div className="text">
-              <h2>Remove from cart</h2>
-              <p>Are you sure you want to remove this item from your cart?</p>
-            </div>
-            <div className="button-container">
-              <button onClick={handleConfirmDelete}>Yes</button>
-              <button onClick={handleCancelDelete}>No</button>
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -7,6 +7,7 @@ export const SignUp = () => {
   const [inputPass, setInputPass] = useState("");
   const [inputCPass, setInputCPass] = useState("");
   const [inputEmail, setInputEmail] = useState("");
+  const [inputPhone, setInputPhone] = useState("");
   const [userRole, setUserRole] = useState("");
   const [accountData, setAccountData] = useState({});
   const [isSigningUp, setIsSigningUp] = useState(false);
@@ -19,6 +20,7 @@ export const SignUp = () => {
     setIsSigningUp(true);
     const newAccountData = {
       email: inputEmail,
+      phone: inputPhone,
       userRole: userRole,
       password: inputPass,
       confirmPass: inputCPass,
@@ -83,6 +85,17 @@ export const SignUp = () => {
               name="emailAdd"
               value={inputEmail}
               onChange={(e) => setInputEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="input-field">
+            <label htmlFor="phone">Phone:</label>
+            <input
+              type="number"
+              id="phone"
+              name="phone"
+              value={inputPhone}
+              onChange={(e) => setInputPhone(e.target.value)}
             />
           </div>
 
